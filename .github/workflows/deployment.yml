@@ -1,57 +1,96 @@
-name: Continuous Deployment
+# name: Continuous Deployment
+
+# on:
+#   push:
+#     branches:
+#       - main  # Trigger deployment on push to the main branch
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v3
+
+#       - name: Set up Python
+#         uses: actions/setup-python@v4
+#         with:
+#           python-version: '3.9' 
+
+#       - name: Create virtual environment
+#         run: |
+#           python -m venv venv
+#           source venv/bin/activate
+
+#       - name: Install dependencies
+#         run: |
+#           source venv/bin/activate
+#           pip install -r requirements.txt
+
+#       - name: Install Uvicorn
+#         run: |
+#           source venv/bin/activate
+#           pip install uvicorn
+
+#       - name: Deploy to remote server
+#         env:
+#           DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+#           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+#           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+#         run: |
+#           mkdir -p ~/.ssh
+#           echo "$DEPLOY_KEY" > ~/.ssh/id_rsa
+#           chmod 600 ~/.ssh/id_rsa
+#           ssh-keyscan -H $DEPLOY_HOST >> ~/.ssh/known_hosts
+
+#           # Copy files to the remote server
+#           scp -r . $DEPLOY_USER@$DEPLOY_HOST:/home/azureuser
+
+#           # SSH into the server and start the application
+#           ssh $DEPLOY_USER@$DEPLOY_HOST << 'EOF'
+#           cd /home/azureuser
+#           python -m venv venv
+#           source venv/bin/activate
+#           pip install -r requirements.txt
+#           nohup uvicorn main:app --host 0.0.0.0 --port 8000 > app.log 2>&1 &
+#           EOF
+
+
+
+
+name: Deploy Pipeline
 
 on:
   push:
     branches:
-      - main  # Trigger deployment on push to the main branch
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v0.1.3
         with:
-          python-version: '3.9' 
-
-      - name: Create virtual environment
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-
-      - name: Install dependencies
-        run: |
-          source venv/bin/activate
-          pip install -r requirements.txt
-
-      - name: Install Uvicorn
-        run: |
-          source venv/bin/activate
-          pip install uvicorn
-
-      - name: Deploy to remote server
-        env:
           DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-        run: |
-          mkdir -p ~/.ssh
-          echo "$DEPLOY_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H $DEPLOY_HOST >> ~/.ssh/known_hosts
-
-          # Copy files to the remote server
-          scp -r . $DEPLOY_USER@$DEPLOY_HOST:/home/azureuser
-
-          # SSH into the server and start the application
-          ssh $DEPLOY_USER@$DEPLOY_HOST << 'EOF'
-          cd /home/azureuser
-          python -m venv venv
-          source venv/bin/activate
-          pip install -r requirements.txt
-          nohup uvicorn main:app --host 0.0.0.0 --port 8000 > app.log 2>&1 &
-          EOF
+          script: |
+            cd /home/azureuser/fastapi-book-project
+            git pull origin main
+            
+            # Ensure virtual environment exists
+            if [ ! -d "venv" ]; then
+              python3 -m venv venv
+            fi
+            
+            source venv/bin/activate
+            pip install --upgrade pip
+            pip install -r requirements.txt
+            
+            alembic upgrade head
+            sudo systemctl restart fastapi
