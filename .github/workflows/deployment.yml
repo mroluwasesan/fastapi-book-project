@@ -28,8 +28,8 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            cd /fastapi-app
             git pull origin main
+            cd fastapi-book-project
             source venv/bin/activate
             pip install -r requirements.txt
             # Stop the existing Uvicorn process (if running)
