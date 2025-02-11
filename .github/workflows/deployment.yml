@@ -2,59 +2,27 @@ name: Deploy
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
+      - name: Deploy to server
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          # Ensure the .ssh directory exists
+          mkdir -p ~/.ssh
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+          # Write the SSH private key to a file with secure permissions
+          echo "$DEPLOY_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
 
-      - name: Deploy to Server
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          password: ${{ secrets.SERVER_PASSWORD }}
-          script: |
-            # Navigate to the project directory (create it if it doesn't exist)
-            mkdir -p /home/ubuntu/fastapi-book-project
-            cd /home/ubuntu/fastapi-book-project
-
-            # Initialize a Git repository if it doesn't exist
-            if [ ! -d .git ]; then
-              git init
-              git remote add origin <your-repository-url>
-            fi
-
-            # Pull the latest code from the main branch
-            git fetch origin main
-            git reset --hard origin/main
-
-            # Set up a virtual environment if it doesn't exist
-            if [ ! -d venv ]; then
-              python3 -m venv venv
-            fi
-
-            # Activate the virtual environment
-            source venv/bin/activate
-
-            # Install dependencies
-            pip install -r requirements.txt
-
-            # Stop the existing Uvicorn process (if running)
-            pkill -f "uvicorn main:app" || true
-
-            # Start the FastAPI app with Uvicorn
-            nohup uvicorn main:app --host 0.0.0.0 --port 8000 > uvicorn.log 2>&1 &
+          # Execute the deployment script on the remote server
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "$DEPLOY_USER@$DEPLOY_HOST" \
+              "/home/${DEPLOY_USER}/fastapi-book-project/deploy.sh"
