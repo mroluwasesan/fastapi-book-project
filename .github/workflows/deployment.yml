@@ -1,34 +1,3 @@
-# name: Deploy
-
-# on:
-#   push:
-#     branches: [main]
-
-# jobs:
-#   deploy:
-#     runs-on: ubuntu-latest
-
-#     steps:
-#       - uses: actions/checkout@v3
-
-#       - name: Deploy to server
-#         env:
-#           DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
-#           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-#           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-#         run: |
-#           # Ensure the .ssh directory exists
-#           mkdir -p ~/.ssh
-
-#           # Write the SSH private key to a file with secure permissions
-#           echo "$DEPLOY_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
-
-#           # Execute the deployment script on the remote server
-#           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "$DEPLOY_USER@$DEPLOY_HOST" \
-#               "/home/${DEPLOY_USER}/fastapi-book-project/deploy.sh"
-
-
-
 name: Deploy
 
 on:
@@ -54,13 +23,8 @@ jobs:
           # Write the SSH private key to a file with secure permissions
           echo "$DEPLOY_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
 
-          # Debug: Check if the script exists on the remote server
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "$DEPLOY_USER@$DEPLOY_HOST" \
-              "ls -l /home/${DEPLOY_USER}/fastapi-book-project/deploy.sh"
-
-          # Upload the deploy.sh script to the remote server
-          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ./deploy.sh "$DEPLOY_USER@$DEPLOY_HOST:/home/${DEPLOY_USER}/fastapi-book-project/deploy.sh"
-
           # Execute the deployment script on the remote server
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "$DEPLOY_USER@$DEPLOY_HOST" \
-              "/home/${DEPLOY_USER}/fastapi-book-project/deploy.sh"
+              "/home/${DEPLOY_USER}/fastapi-book-project/scripts/deploy.sh"
+
+
