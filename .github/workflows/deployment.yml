@@ -28,9 +28,11 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_PASSWORD }}
           script: |
+            cd /home/ubuntu/fastapi-app
             git pull origin main
-            cd /fastapi-book-project
-            python -m venv venv
             source venv/bin/activate
             pip install -r requirements.txt
-            systemctl restart fastapi-app
+            # Stop the existing Uvicorn process (if running)
+            pkill -f "uvicorn main:app" || true
+            # Start the FastAPI app with Uvicorn
+            nohup uvicorn main:app --host 0.0.0.0 --port 8000 > uvicorn.log 2>&1 &
