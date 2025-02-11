@@ -28,7 +28,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            git pull origin main
+            git pull main
             cd fastapi-book-project
             source venv/bin/activate
             pip install -r requirements.txt
