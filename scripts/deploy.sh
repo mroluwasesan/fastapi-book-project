@@ -2,7 +2,7 @@
 set -e
 
 # Pull latest code
-cd "$(dirname "$0")/.."
+cd /home/${DEPLOY_USER}/fastapi-book-project
 git pull origin main
 
 # Build and restart Docker container
