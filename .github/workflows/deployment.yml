@@ -19,13 +19,6 @@ jobs:
           echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
 
-      - name: Create directory structure on server
-        env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-        run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST "mkdir -p /home/${DEPLOY_USER}/fastapi-book-project/scripts"
-
       - name: Copy deploy.sh to server
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
@@ -38,4 +31,4 @@ jobs:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST "chmod +x /home/${DEPLOY_USER}/fastapi-book-project/scripts/deploy.sh && /home/${DEPLOY_USER}/fastapi-book-project/scripts/deploy.sh"
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST "chmod +x /home/${DEPLOY_USER}/fastapi-book-project/scripts/deploy.sh && DEPLOY_USER=${DEPLOY_USER} /home/${DEPLOY_USER}/fastapi-book-project/scripts/deploy.sh"
