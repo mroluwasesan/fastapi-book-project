@@ -10,9 +10,12 @@ mkdir -p "$PROJECT_DIR"
 # Change to the project directory
 cd "$PROJECT_DIR"
 
-# Clone the repository if it doesn't exist
+# Check if the directory is already a Git repository
 if [ ! -d .git ]; then
+  echo "Cloning repository..."
   git clone https://github.com/mroluwasesan/fastapi-book-project.git .
+else
+  echo "Repository already exists. Pulling latest changes..."
 fi
 
 # Pull the latest code
