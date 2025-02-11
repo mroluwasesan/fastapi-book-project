@@ -1,34 +1,57 @@
-name: Deploy
+name: Continuous Deployment
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main  # Trigger deployment on push to the main branch
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Set up SSH
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9' 
+
+      - name: Create virtual environment
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+
+      - name: Install dependencies
+        run: |
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: Install Uvicorn
+        run: |
+          source venv/bin/activate
+          pip install uvicorn
+
+      - name: Deploy to remote server
         env:
           DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
           mkdir -p ~/.ssh
-          echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
+          echo "$DEPLOY_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $DEPLOY_HOST >> ~/.ssh/known_hosts
 
-      - name: Copy deploy.sh to server
-        env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-        run: |
-          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ./scripts/deploy.sh $DEPLOY_USER@$DEPLOY_HOST:/home/${DEPLOY_USER}/fastapi-book-project/scripts/deploy.sh
+          # Copy files to the remote server
+          scp -r . $DEPLOY_USER@$DEPLOY_HOST:/home/azureuser
 
-      - name: Run deploy.sh on server
-        env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-        run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST "chmod +x /home/${DEPLOY_USER}/fastapi-book-project/scripts/deploy.sh && DEPLOY_USER=${DEPLOY_USER} /home/${DEPLOY_USER}/fastapi-book-project/scripts/deploy.sh"
+          # SSH into the server and start the application
+          ssh $DEPLOY_USER@$DEPLOY_HOST << 'EOF'
+          cd /home/azureuser
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          nohup uvicorn main:app --host 0.0.0.0 --port 8000 > app.log 2>&1 &
+          EOF
