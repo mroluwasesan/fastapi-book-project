@@ -11,14 +11,24 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Deploy to server
+      - name: Set up SSH
         env:
           DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
           mkdir -p ~/.ssh
           echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST "/home/${DEPLOY_USER}/hng12-stage2/scripts/deploy.sh"
 
+      - name: Copy deploy.sh to server
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ./scripts/deploy.sh $DEPLOY_USER@$DEPLOY_HOST:/home/${DEPLOY_USER}/hng12-stage2/scripts/deploy.sh
+
+      - name: Run deploy.sh on server
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST "chmod +x /home/${DEPLOY_USER}/hng12-stage2/scripts/deploy.sh && /home/${DEPLOY_USER}/hng12-stage2/scripts/deploy.sh"
