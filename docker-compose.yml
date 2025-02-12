@@ -10,8 +10,8 @@ services:
       - "8000:8000"
     environment:
       - APP_ENV=production
-    depends_on:
-      - nginx
+    # depends_on:
+    #   - nginx
 
   nginx:
     image: nginx:latest
