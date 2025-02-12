@@ -109,5 +109,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /home/azureuser/fastapi-book-project
-            docker-compose down
-            docker-compose up -d
+            docker compose down
+            docker compose up -d
+
+    
