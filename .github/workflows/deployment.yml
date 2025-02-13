@@ -56,11 +56,15 @@
 
 name: deploy
 
+# on:
+#   pull_request:
+
+#     branches:
+#       - main
 on:
   push:
     branches:
       - main
-
 jobs:
   deploy:
     if: github.event.pull_request.merged == true
@@ -92,9 +96,8 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            rsync -avz --exclude '.git' --exclude 'venv' --exclude 'node_modules' ./ /home/azureuser/fastapi-book-project
-
+          source: "."
+          target: "/home/azureuser/fastapi-book-project"
 
       - name: Restart FastAPI service
         uses: appleboy/ssh-action@master
