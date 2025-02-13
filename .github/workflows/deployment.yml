@@ -58,8 +58,6 @@ name: deploy
 
 on:
   pull_request:
-    types:
-      - closed
     branches:
       - main
 
