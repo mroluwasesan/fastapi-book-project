@@ -52,15 +52,15 @@
 #             pip install -r requirements.txt
 #             sudo systemctl restart fastapi
 
-
-
-name: deploy
-
 # on:
 #   pull_request:
 
 #     branches:
 #       - main
+
+
+name: deploy
+
 on:
   push:
     branches:
