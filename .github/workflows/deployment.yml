@@ -54,17 +54,12 @@
 
 
 
-# name: deploy
-
-# on:
-#   pull_request:
-#     types:
-#       - closed
-#     branches:
-#       - main
+name: deploy
 
 on:
-  push:
+  pull_request:
+    types:
+      - closed
     branches:
       - main
 
