@@ -94,8 +94,9 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "."
-          target: "/home/azureuser/fastapi-book-project"
+          script: |
+            rsync -avz --exclude '.git' --exclude 'venv' --exclude 'node_modules' ./ /home/azureuser/fastapi-book-project
+
 
       - name: Restart FastAPI service
         uses: appleboy/ssh-action@master
