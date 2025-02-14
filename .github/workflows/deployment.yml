@@ -1,9 +1,9 @@
 # name: deploy
 
-# on:
-#   push:
-#     branches:
-#       - main
+# # on:
+# #   push:
+# #     branches:
+# #       - main
 
 # on:
 #   pull_request:
@@ -53,11 +53,16 @@
 #             sudo systemctl restart fastapi
 
 
+
+name: deploy
+
 on:
-  push:
+  pull_request:
+    types:
+      - closed
     branches:
       - main
-      
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -101,5 +106,3 @@ jobs:
             cd /home/azureuser/fastapi-book-project
             docker compose down
             docker compose up -d
-
-    
