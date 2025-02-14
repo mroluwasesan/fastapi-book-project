@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import OrderedDict
+from collections import OrderedDict
 
 from pydantic import BaseModel
 
@@ -53,6 +53,7 @@ class InMemoryDB:
         self.books.update({book.id: book})
 
     def get_book(self, book_id: int) -> Book:
+        
         """Gets a specific book from database.
 
         Args:
@@ -62,7 +63,7 @@ class InMemoryDB:
             Book: Book.
         """
         return self.books.get(book_id)
-
+    
     def update_book(self, book_id: int, data: Book) -> Book:
         """Updates a specific book in database.
 

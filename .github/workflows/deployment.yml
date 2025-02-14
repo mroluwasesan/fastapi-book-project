@@ -1,11 +1,11 @@
 # name: deploy
 
+# # on:
+# #   push:
+# #     branches:
+# #       - main
+
 # on:
-#   push:
-#     branches:
-#       - main
-
-
 #   pull_request:
 #     types:
 #       - closed
@@ -52,116 +52,54 @@
 #             pip install -r requirements.txt
 #             sudo systemctl restart fastapi
 
-
-
-
-
-# name: deploy
-
-# on:
-#   push:
-#     branches:
-#       - main
-#   pull_request:
-#     branches:
-#       - main
-#     types: [opened, synchronize, reopened]
-
-# jobs:
-#   deploy:
-#     runs-on: ubuntu-latest
-
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@v3
-
-#       - name: Set up Docker Buildx
-#         uses: docker/setup-buildx-action@v2
-
-#       - name: Log in to Docker Hub
-#         uses: docker/login-action@v2
-#         with:
-#           username: ${{ secrets.DOCKER_HUB_USERNAME }}
-#           password: ${{ secrets.DOCKER_HUB_TOKEN }}
-
-#       - name: Build and push Docker image
-#         uses: docker/build-push-action@v3
-#         with:
-#           context: .
-#           push: true
-#           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/fastapi-app:latest
-
-#       - name: Copy files to server
-#         uses: appleboy/scp-action@master
-#         with:
-#           host: ${{ secrets.SSH_HOST }}
-#           username: ${{ secrets.SSH_USERNAME }}
-#           key: ${{ secrets.SSH_PRIVATE_KEY }}
-#           source: "."
-#           target: "/home/azureuser/fastapi-book-project"
-
-#       - name: Restart FastAPI service
-#         uses: appleboy/ssh-action@master
-#         with:
-#           host: ${{ secrets.SSH_HOST }}
-#           username: ${{ secrets.SSH_USERNAME }}
-#           key: ${{ secrets.SSH_PRIVATE_KEY }}
-#           script: |
-#             cd /home/azureuser/fastapi-book-project
-#             docker compose down
-#             docker compose up -d
-
-
-name: CD Pipeline
-
 on:
-  push:
-    branches: [main]
+  pull_request:
+
+    branches:
+      - main
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Deploy via SSH
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/fastapi-app:latest
+
+      - name: Copy files to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "."
+          target: "/home/azureuser/fastapi-book-project"
+
+      - name: Restart FastAPI service
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Update package index and install dependencies
-            sudo apt-get update -y
-            sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+            cd /home/azureuser/fastapi-book-project
+            docker compose down
+            docker compose up -d
 
-            # Add Docker's official GPG key
-            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-            sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-
-            # Install Docker
-            sudo apt-get update -y
-            sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-
-            # Add the SSH user to the Docker group
-            sudo usermod -aG docker ${{ secrets.SSH_USERNAME }}
-
-            # Install Docker Compose
-            sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-            sudo chmod +x /usr/local/bin/docker-compose
-
-            # Verify installations
-            docker --version
-            docker-compose --version
-
-            # Free up port 80
-            sudo fuser -k 80/tcp
-
-            # Navigate to the project directory and deploy
-            git clone https://github.com/mroluwasesan/fastapi-book-project.git
-            cd /home/azureuser/
-            cd fastapi-book-project/
-            git fetch origin main
-            git reset --hard origin/main
-            sudo docker-compose up -d --build
-          
+    
